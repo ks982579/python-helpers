@@ -12,7 +12,7 @@ Section to outline what to find and ideas I have.
 
 ### In Progress
 
-- Nothing yet...
+- Parse and aggregate time spent on tasks daily.
 
 ### Backlog
 
@@ -26,7 +26,7 @@ Section to outline what to find and ideas I have.
 Hoping to work for Bash and PowerShell.
 
 First, you must clone the repository into a path on your computer.
-Then do the `python -m venv venv` to create a virtual environment.
+Then do the `python3.13 -m venv venv` to create a virtual environment.
 
 ### PowerShell
 
