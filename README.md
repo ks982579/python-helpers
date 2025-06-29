@@ -16,10 +16,12 @@ Section to outline what to find and ideas I have.
 
 ### Backlog
 
-- KDL config
+- YAML config
 - Config creater - for starting first time and for updates
-- Create new day
--
+- Create new day - remove completed list items.
+- Ending day - find the file, add "Bye" and the end time, then run calculation.
+- Adding new ticket w/standard tasks AND to brag book
+- Completing a work ticket, update brag book - should it be JSON file - KDL?
 
 ## Idea: How to Use
 

@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Tuple
 import argparse
+import yaml
+import os
 
 
 def parse_time(time_str: str) -> int:
@@ -136,6 +138,62 @@ def parse_day_tasks(day_content: str) -> Dict[str, any]:
 
 
 # TODO: add info to document
+def get_config_file_path() -> Path:
+    """Get the path to the config file."""
+    config_dir = Path.home() / '.config' / 'python-helpers'
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir / 'config.yaml'
+
+
+def create_config():
+    """Create a new config file by prompting the user for the tracking root directory."""
+    print("Setting up time tracker configuration...")
+    
+    while True:
+        root_dir = input("Enter the tracking root directory (use '.' for current directory): ").strip()
+        if not root_dir:
+            print("Please enter a directory path.")
+            continue
+            
+        path = Path(root_dir)
+        if root_dir == '.':
+            path = Path('.').absolute()
+        elif not path.is_absolute():
+            path = Path.cwd() / path
+            
+        if not path.exists():
+            create = input(f"Directory {path} doesn't exist. Create it? (y/n): ").strip().lower()
+            if create == 'y':
+                path.mkdir(parents=True, exist_ok=True)
+                print(f"Created directory: {path}")
+            else:
+                continue
+                
+        config = {
+            'tracking_root_directory': str(path)
+        }
+        
+        config_file = get_config_file_path()
+        with open(config_file, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False)
+        
+        print(f"Config saved to: {config_file}")
+        print(f"Tracking root directory set to: {path}")
+        break
+
+
+def load_config() -> dict:
+    """Load config from file, create if it doesn't exist."""
+    config_file = get_config_file_path()
+    
+    if not config_file.exists():
+        print("Config file not found. Creating new configuration...")
+        create_config()
+    
+    with open(config_file, 'r') as f:
+        return yaml.safe_load(f)
+
+
 def print_summary(results: Dict[str, Dict[str, any]]):
     """Print a summary of the parsed time tracking data."""
     for date, tasks in results.items():
@@ -164,11 +222,24 @@ def print_summary(results: Dict[str, Dict[str, any]]):
 def main():
     parser = argparse.ArgumentParser(
         description='Parse time tracking markdown files')
-    parser.add_argument('files', nargs='+', help='Markdown files to parse')
+    parser.add_argument('files', nargs='*', help='Markdown files to parse')
     parser.add_argument('--summary', action='store_true',
                         help='Show summary across all files')
+    parser.add_argument('--config', action='store_true',
+                        help='Set up or reconfigure the tracking root directory')
 
     args = parser.parse_args()
+
+    # Handle config setup
+    if args.config:
+        create_config()
+        return
+
+    # Ensure files are provided when not using --config
+    if not args.files:
+        parser.print_help()
+        print("\nError: No files specified. Use --config to set up configuration first.")
+        return
 
     all_results = {}
 
