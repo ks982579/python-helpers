@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-
+"""
 def main():
     parser = argparse.ArgumentParser(
         description='Parse time tracking markdown files')
@@ -58,3 +58,8 @@ def main():
                 print(f"\n🔸 {task_name}: {duration_str} {days_str}")
     else:
         print("❌ No time tracking data found in the specified files.")
+"""
+
+if __name__ == "__main__":
+    print(Path('.').absolute())
+    print(dir())

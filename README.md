@@ -13,10 +13,10 @@ Section to outline what to find and ideas I have.
 ### In Progress
 
 - Parse and aggregate time spent on tasks daily.
+- YAML config
 
 ### Backlog
 
-- YAML config
 - Config creater - for starting first time and for updates
 - Create new day - remove completed list items.
 - Ending day - find the file, add "Bye" and the end time, then run calculation.

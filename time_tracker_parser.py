@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 import argparse
 import yaml
 import os
+from markflow.models.yaml_config import YamlConfig
 
 
 def parse_time(time_str: str) -> int:
@@ -137,63 +138,6 @@ def parse_day_tasks(day_content: str) -> Dict[str, any]:
     return grouped_tasks
 
 
-# TODO: add info to document
-def get_config_file_path() -> Path:
-    """Get the path to the config file."""
-    config_dir = Path.home() / '.config' / 'python-helpers'
-    config_dir.mkdir(parents=True, exist_ok=True)
-    return config_dir / 'config.yaml'
-
-
-def create_config():
-    """Create a new config file by prompting the user for the tracking root directory."""
-    print("Setting up time tracker configuration...")
-    
-    while True:
-        root_dir = input("Enter the tracking root directory (use '.' for current directory): ").strip()
-        if not root_dir:
-            print("Please enter a directory path.")
-            continue
-            
-        path = Path(root_dir)
-        if root_dir == '.':
-            path = Path('.').absolute()
-        elif not path.is_absolute():
-            path = Path.cwd() / path
-            
-        if not path.exists():
-            create = input(f"Directory {path} doesn't exist. Create it? (y/n): ").strip().lower()
-            if create == 'y':
-                path.mkdir(parents=True, exist_ok=True)
-                print(f"Created directory: {path}")
-            else:
-                continue
-                
-        config = {
-            'tracking_root_directory': str(path)
-        }
-        
-        config_file = get_config_file_path()
-        with open(config_file, 'w') as f:
-            yaml.dump(config, f, default_flow_style=False)
-        
-        print(f"Config saved to: {config_file}")
-        print(f"Tracking root directory set to: {path}")
-        break
-
-
-def load_config() -> dict:
-    """Load config from file, create if it doesn't exist."""
-    config_file = get_config_file_path()
-    
-    if not config_file.exists():
-        print("Config file not found. Creating new configuration...")
-        create_config()
-    
-    with open(config_file, 'r') as f:
-        return yaml.safe_load(f)
-
-
 def print_summary(results: Dict[str, Dict[str, any]]):
     """Print a summary of the parsed time tracking data."""
     for date, tasks in results.items():
@@ -219,40 +163,98 @@ def print_summary(results: Dict[str, Dict[str, any]]):
         print(f"\n⏱️  Total time tracked: {total_duration_str}")
 
 
+def get_latest_sprint(sprint_path: Path) -> Path:
+    """
+    From the path provided, the assumptions are the paths are
+    sorted ascending.
+    This will return the latest spring day.
+    """
+    print(f"Sprints Root: {str(sprint_path)}")
+    last_year = [x for x in sprint_path.iterdir() if x.is_dir()][-1]
+    last_month = [x for x in last_year.iterdir() if x.is_dir()][-1]
+    last_sprint = [x for x in last_month.iterdir() if x.is_dir()][-1]
+    return [x for x in last_sprint.iterdir() if x.is_file() and '.md' in x.suffix][-1]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Parse time tracking markdown files')
-    parser.add_argument('files', nargs='*', help='Markdown files to parse')
+    parser.add_argument('--file', action='append',
+                        help='Markdown files to parse')
+    parser.add_argument('--aggregate-time', action='store_true',
+                        help='aggregates time in the latest sprint-day file')
+    parser.add_argument('--new-day', action='store_true',
+                        help='creates a new sprint day')
     parser.add_argument('--summary', action='store_true',
                         help='Show summary across all files')
     parser.add_argument('--config', action='store_true',
-                        help='Set up or reconfigure the tracking root directory')
+                        help='Set up or reconfigure the tracking root directory to the top of sprints')
+    # parser.add_argument('--help', action='store_true',
+    #                     help='prints the help text for this tool')
 
     args = parser.parse_args()
 
+    # if specific file not specified use config
+    # if args.help:
+    #     parser.print_help()
+    #     return
+
     # Handle config setup
     if args.config:
-        create_config()
-        return
-
-    # Ensure files are provided when not using --config
-    if not args.files:
-        parser.print_help()
-        print("\nError: No files specified. Use --config to set up configuration first.")
+        YamlConfig.create_config()
         return
 
     all_results = {}
 
-    for file_path in args.files:
-        path = Path(file_path)
-        if not path.exists():
-            print(f"❌ File not found: {file_path}")
-            continue
+    # to hold files if needed.
+    files: List[Path] = []
 
+    if args.file is not None and len(args.file) > 0:
+        for file_path in args.file:
+            path = Path(file_path)
+            if not path.exists():
+                print(f"❌ File not found: {file_path}")
+                continue
+            else:
+                files.append(path)
+    else:
+        config: YamlConfig = YamlConfig.load_config()
+        file_path = get_latest_sprint(config.root_path)
+
+    if args.aggregate_time:
         print(f"📄 Processing: {file_path}")
         results = parse_time_tracking_file(path)
         all_results.update(results)
 
+    if args.new_day:
+        config: YamlConfig = YamlConfig.load_config()
+        file_path = get_latest_sprint(config.root_path)
+        # get date from file name
+        # will have to determine which week of the year it is
+
+        # WARN: There will come a time in 2026 where week will be 00...
+        parent_path = file_path.parent.absolute()
+        rn = datetime.now()  # right_now
+        year = rn.strftime("%Y")
+        month = rn.strftime("%m")
+        sprint = rn.strftime("%U")
+        new_name = f"{rn.strftime("%Y%m%d")}.md"
+
+        # checking not changing weeks mid week
+        if int(sprint) == 0:
+            update = datetime(rn.year - 1, 12, 31)
+            year = update.strftime("%Y")
+            sprint = update.strftime("%U")
+
+        new_file_path = config.root_path / year / month / sprint
+        new_file_path.mkdir(parents=True, exist_ok=True)
+        new_name = new_file_path / f"{datetime.now().strftime("%Y%m%d")}.md"
+
+        with open(file_path, 'r') as yesterday:
+            with open(new_name, 'w') as file:
+                # Can read-to-write update later
+                file.write(yesterday.read())
+        print(f"📊 OCreated: {new_name})")
     if all_results:
         print_summary(all_results)
 
@@ -291,4 +293,5 @@ def main():
 
 
 if __name__ == '__main__':
+    main()
     main()
