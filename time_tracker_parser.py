@@ -8,6 +8,7 @@ import argparse
 import yaml
 import os
 from markflow.models.yaml_config import YamlConfig
+from markflow.models.markdown_files import MarkdownFile
 
 
 def parse_time(time_str: str) -> int:
@@ -207,8 +208,11 @@ def main():
     all_results = {}
 
     # to hold files if needed.
-    files: List[Path] = []
+    files: List[MarkdownFile] = []
 
+    # What file(s) are we parsing
+    # put file into 'files' either way.
+    # TODO: Encapsulate logic
     if args.file is not None and len(args.file) > 0:
         for file_path in args.file:
             path = Path(file_path)
@@ -216,45 +220,62 @@ def main():
                 print(f"❌ File not found: {file_path}")
                 continue
             else:
-                files.append(path)
-    else:
+                files.append(MarkdownFile(file_path))
+    elif not args.new_day:
         config: YamlConfig = YamlConfig.load_config()
         file_path = get_latest_sprint(config.root_path)
+        files.append(MarkdownFile(file_path))
 
+    # TODO: need groupings to avoid the issue with no files
     if args.aggregate_time:
-        print(f"📄 Processing: {file_path}")
-        results = parse_time_tracking_file(path)
-        all_results.update(results)
+        if len(files) < 1:
+            print("No files found to aggregate?")
+
+        for mdfile in files:
+            print(f"📄 Processing: {mdfile.file_path}")
+            # TODO: parsing doesn't need to reopen file now
+            results = parse_time_tracking_file(mdfile.file_path)
+            all_results.update(results)
 
     if args.new_day:
+        print("Starting a new day!")
         config: YamlConfig = YamlConfig.load_config()
         file_path = get_latest_sprint(config.root_path)
+        latest_sprint_path = get_latest_sprint(config.root_path)
         # get date from file name
         # will have to determine which week of the year it is
+        mdfile = MarkdownFile(latest_sprint_path)
 
         # WARN: There will come a time in 2026 where week will be 00...
-        parent_path = file_path.parent.absolute()
+        latest_parent_path = latest_sprint_path.parent.absolute()
+
+        # Default values
         rn = datetime.now()  # right_now
-        year = rn.strftime("%Y")
-        month = rn.strftime("%m")
+        new_file_name = f"{rn.strftime("%Y%m%d")}.md"
         sprint = rn.strftime("%U")
-        new_name = f"{rn.strftime("%Y%m%d")}.md"
 
-        # checking not changing weeks mid week
-        if int(sprint) == 0:
-            update = datetime(rn.year - 1, 12, 31)
-            year = update.strftime("%Y")
-            sprint = update.strftime("%U")
+        # Check if in the same week
+        # Week switches to 00 for new year
+        if latest_sprint_path.parts[-2] == sprint or int(sprint) == 0:
+            # Adding to same sprint
+            new_file_path = latest_parent_path / new_file_name
+        else:
+            print("🔥 New Sprint - Good Luck!")
+            year = rn.strftime("%Y")
+            month = rn.strftime("%m")
+            # create directory first
+            new_file_path = config.root_path / year / month / sprint
+            new_file_path.mkdir(parents=True, exist_ok=True)
+            # full path
+            new_file_path = new_file_path / new_file_name
 
-        new_file_path = config.root_path / year / month / sprint
-        new_file_path.mkdir(parents=True, exist_ok=True)
-        new_name = new_file_path / f"{datetime.now().strftime("%Y%m%d")}.md"
+        # TODO: Eventually load in the Markdown class
+        print(f"New file: {new_file_path}")
+        with open(new_file_path, 'w') as file:
+            # Can read-to-write update later
+            file.write(mdfile.content)
+        print(f"📊 Created: {new_file_path}")
 
-        with open(file_path, 'r') as yesterday:
-            with open(new_name, 'w') as file:
-                # Can read-to-write update later
-                file.write(yesterday.read())
-        print(f"📊 OCreated: {new_name})")
     if all_results:
         print_summary(all_results)
 

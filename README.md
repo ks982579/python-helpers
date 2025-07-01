@@ -14,14 +14,21 @@ Section to outline what to find and ideas I have.
 
 - Parse and aggregate time spent on tasks daily.
 - YAML config
+- Config creater - for starting first time and for updates
+- Creating a new day - no other features
 
 ### Backlog
 
-- Config creater - for starting first time and for updates
 - Create new day - remove completed list items.
 - Ending day - find the file, add "Bye" and the end time, then run calculation.
 - Adding new ticket w/standard tasks AND to brag book
 - Completing a work ticket, update brag book - should it be JSON file - KDL?
+
+### Bugs
+
+- Create Config seems to loop again after creating first config?
+- Create new day does not copy the previous day.
+  - seems to get "Sprints Root" twice
 
 ## Idea: How to Use
 
