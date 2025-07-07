@@ -8,7 +8,7 @@ class MarkdownFile:
             raise FileNotFoundError(f"{file_path}")
         self.file_path = abs_file_path
 
-        with open(abs_file_path, 'r') as file:
+        with open(abs_file_path, 'r', encoding="UTF-8") as file:
             self.__raw_content = file.read()
 
     # @property
@@ -29,3 +29,11 @@ class MarkdownFile:
         fdel=_del_content,
         doc="Raw content from Markdown File"
     )
+
+# TODO: Make ABC -> Then have Specific sections with specific rules
+# But each section reacts to CLI input - hence ABC
+
+
+class MarkdownSection:
+    def __init__(self, text: str):
+        self.__raw_content = text

@@ -271,7 +271,7 @@ def main():
             new_file_path = new_file_path / new_file_name
 
         # TODO: Eventually load in the Markdown class
-        with open(new_file_path, 'w') as file:
+        with open(new_file_path, 'w', encoding="UTF-8") as file:
             # Can read-to-write update later
             file.write(mdfile.content)
         print(f"📊 Created: {new_file_path}")
