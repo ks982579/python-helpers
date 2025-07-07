@@ -139,6 +139,7 @@ def parse_day_tasks(day_content: str) -> Dict[str, any]:
     return grouped_tasks
 
 
+# TODO: add in markdown under the times.
 def print_summary(results: Dict[str, Dict[str, any]]):
     """Print a summary of the parsed time tracking data."""
     for date, tasks in results.items():
@@ -151,12 +152,13 @@ def print_summary(results: Dict[str, Dict[str, any]]):
 
         for task_name, task_data in sorted_tasks:
             duration_str = minutes_to_duration(task_data['total_duration'])
-            print(f"\n🔸 {task_name}: {duration_str}")
+            print(f"-{task_name}: {duration_str}")
 
             if task_data['notes']:
-                print("   Notes:")
+                print("\t- Notes:")
                 for note in task_data['notes']:
-                    print(f"   • {note}")
+                    # Note should already have the hyphen
+                    print(f"\t\t{note}")
 
         # Show total time tracked for the day
         total_minutes = sum(task['total_duration'] for task in tasks.values())
@@ -170,7 +172,7 @@ def get_latest_sprint(sprint_path: Path) -> Path:
     sorted ascending.
     This will return the latest spring day.
     """
-    print(f"Sprints Root: {str(sprint_path)}")
+    # print(f"Sprints Root: {str(sprint_path)}")
     last_year = [x for x in sprint_path.iterdir() if x.is_dir()][-1]
     last_month = [x for x in last_year.iterdir() if x.is_dir()][-1]
     last_sprint = [x for x in last_month.iterdir() if x.is_dir()][-1]
@@ -240,7 +242,6 @@ def main():
     if args.new_day:
         print("Starting a new day!")
         config: YamlConfig = YamlConfig.load_config()
-        file_path = get_latest_sprint(config.root_path)
         latest_sprint_path = get_latest_sprint(config.root_path)
         # get date from file name
         # will have to determine which week of the year it is
@@ -270,7 +271,6 @@ def main():
             new_file_path = new_file_path / new_file_name
 
         # TODO: Eventually load in the Markdown class
-        print(f"New file: {new_file_path}")
         with open(new_file_path, 'w') as file:
             # Can read-to-write update later
             file.write(mdfile.content)
@@ -314,5 +314,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
     main()
