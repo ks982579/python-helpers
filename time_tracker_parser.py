@@ -152,7 +152,7 @@ def print_summary(results: Dict[str, Dict[str, any]]):
 
         for task_name, task_data in sorted_tasks:
             duration_str = minutes_to_duration(task_data['total_duration'])
-            print(f"-{task_name}: {duration_str}")
+            print(f"- {task_name}: {duration_str}")
 
             if task_data['notes']:
                 print("\t- Notes:")
@@ -273,15 +273,15 @@ def main():
         # Update the date header in the content
         updated_content = mdfile.content
         new_date = rn.strftime("%Y-%m-%d")
-        
+
         # Replace the date in the header "# Today YYYY-MM-DD"
         updated_content = re.sub(
-            r'^# Today \d{4}-\d{2}-\d{2}', 
-            f'# Today {new_date}', 
-            updated_content, 
+            r'^# Today \d{4}-\d{2}-\d{2}',
+            f'# Today {new_date}',
+            updated_content,
             flags=re.MULTILINE
         )
-        
+
         # TODO: Eventually load in the Markdown class
         with open(new_file_path, 'w', encoding="UTF-8") as file:
             # Can read-to-write update later
