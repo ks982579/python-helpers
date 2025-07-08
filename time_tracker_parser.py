@@ -270,15 +270,28 @@ def main():
             # full path
             new_file_path = new_file_path / new_file_name
 
+        # Update the date header in the content
+        updated_content = mdfile.content
+        new_date = rn.strftime("%Y-%m-%d")
+        
+        # Replace the date in the header "# Today YYYY-MM-DD"
+        updated_content = re.sub(
+            r'^# Today \d{4}-\d{2}-\d{2}', 
+            f'# Today {new_date}', 
+            updated_content, 
+            flags=re.MULTILINE
+        )
+        
         # TODO: Eventually load in the Markdown class
         with open(new_file_path, 'w', encoding="UTF-8") as file:
             # Can read-to-write update later
-            file.write(mdfile.content)
+            file.write(updated_content)
         print(f"📊 Created: {new_file_path}")
 
     if all_results:
         print_summary(all_results)
 
+        # TODO: Summary will need updates
         if args.summary and len(all_results) > 1:
             print("\n" + "=" * 60)
             print("📊 OVERALL SUMMARY")
