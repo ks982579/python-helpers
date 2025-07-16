@@ -16,6 +16,7 @@ Section to outline what to find and ideas I have.
 - YAML config
 - Config creater - for starting first time and for updates
 - Creating a new day - no other features
+- Helper to comment out code in an XML file
 
 ### Backlog
 

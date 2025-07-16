@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.web>
+    <compilation debug="true" targetFramework="4.8" />
+    <httpErrors errorMode="Custom" defaultResponseMode="Redirect">
+      <remove statusCode="404" />
+      <error statusCode="404" responseMode="Redirect" redirect="~/Error/NotFound" />
+      <remove statusCode="500" />
+      <error statusCode="500" responseMode="Redirect" redirect="~/Error/ServerError" />
+    </httpErrors>
+  </system.web>
+</configuration>

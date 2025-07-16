@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - v0.1 Able to create a config file that holds directory of valut.
 - v0.1 Able to create a new file to start a new day.
 - v0.1 New day now updates the date in title of MD file.
+- v0.1 Helper to comment out specific code in XML file.
 
 ### Changed
 
