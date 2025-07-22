@@ -274,13 +274,46 @@ def main():
         updated_content = mdfile.content
         new_date = rn.strftime("%Y-%m-%d")
 
-        # Replace the date in the header "# Today YYYY-MM-DD"
-        updated_content = re.sub(
-            r'^# Today \d{4}-\d{2}-\d{2}',
-            f'# Today {new_date}',
-            updated_content,
-            flags=re.MULTILINE
-        )
+        # Replace the first line with the new date
+        lines = updated_content.split('\n')
+        if lines:
+            lines[0] = f'# Today {new_date}'
+        
+        # Find the Daily Tracker section and add new day entry
+        daily_tracker_index = -1
+        for i, line in enumerate(lines):
+            if line.strip() == "### Daily Tracker":
+                daily_tracker_index = i
+                break
+        
+        if daily_tracker_index != -1:
+            # Get current time for the initial entry
+            current_time = rn.strftime("%H:%M")
+            day_abbrev = rn.strftime("%a")  # Mon, Tue, Wed, etc.
+            
+            # Create the new day section
+            new_day_section = [
+                "",  # Empty line before
+                f"#### {new_date} ({day_abbrev})",
+                "",  # Empty line after
+                f"- {current_time} - Admin"
+            ]
+            
+            # Insert after the Daily Tracker heading
+            # Find where to insert (after any existing content under Daily Tracker)
+            insert_index = daily_tracker_index + 1
+            
+            # Skip any existing content until we find a good insertion point
+            while (insert_index < len(lines) and 
+                   lines[insert_index].strip() != "" and 
+                   not lines[insert_index].startswith("####")):
+                insert_index += 1
+            
+            # Insert the new day section
+            for i, section_line in enumerate(new_day_section):
+                lines.insert(insert_index + i, section_line)
+        
+        updated_content = '\n'.join(lines)
 
         # TODO: Eventually load in the Markdown class
         with open(new_file_path, 'w', encoding="UTF-8") as file:
